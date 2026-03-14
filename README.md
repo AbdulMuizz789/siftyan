@@ -212,14 +212,7 @@ siftyan/
 
 ## 🤝 Contributing
 
-Contributions are welcome.
-
-Steps:
-
-1. Fork the repository
-2. Create a new branch
-3. Commit your changes
-4. Submit a Pull Request
+We are not welcoming contributions yet. When the project is out of initial development, we will open contributions soon.
 
 ---
 
