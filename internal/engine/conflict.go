@@ -88,13 +88,26 @@ func (d *ConflictDetector) traverse(dep *parser.Dependency, currentPath []string
 	// TODO: Check the root project's license
 	// For simplicity, we assume the root is Permissive if not otherwise specified
 	if licenseType == StrongCopyleftLT {
-		d.notify(Conflict{
-			Type:        CopyleftPropagation,
-			Path:        append([]string{}, currentPath...),
-			Description: "Strong Copyleft detected in a binary distribution. This triggers the 'viral' clause.",
-			Impact:      "HIGH",
-			Suggestions: []string{"Replace this dependency", "Change your project license to GPL"},
-		})
+		switch d.model {
+		case "binary":
+			// If model is binary, this is a HIGH impact conflict for permissive projects
+			d.notify(Conflict{
+				Type:        CopyleftPropagation,
+				Path:        append([]string{}, currentPath...),
+				Description: "Strong Copyleft detected in a binary distribution. This triggers the 'viral' clause.",
+				Impact:      "HIGH",
+				Suggestions: []string{"Replace this dependency", "Change your project license to GPL"},
+			})
+		case "saas":
+			// In SaaS, standard GPL is often acceptable (unlike AGPL)
+			d.notify(Conflict{
+				Type:        CopyleftPropagation,
+				Path:        append([]string{}, currentPath...),
+				Description: "Strong Copyleft detected. Acceptable for internal SaaS use, but verify no client-side code is included.",
+				Impact:      "LOW",
+				Suggestions: []string{"Verify that this code is not shipped to the browser"},
+			})
+		}
 	}
 
 	// Detect License Ambiguity
