@@ -7,21 +7,30 @@ import (
 )
 
 // TerminalRenderer prints conflicts in plain English
-type TerminalRenderer struct{}
-
-func NewTerminalRenderer() *TerminalRenderer {
-	return &TerminalRenderer{}
+type TerminalRenderer struct {
+	conflicts []engine.Conflict
 }
 
-func (r *TerminalRenderer) Render(conflicts []engine.Conflict) {
-	if len(conflicts) == 0 {
-		fmt.Println("OK: No license conflicts detected!")
+func NewTerminalRenderer() *TerminalRenderer {
+	return &TerminalRenderer{
+		conflicts: make([]engine.Conflict, 0),
+	}
+}
+
+// OnConflictFound implements the ConflictObserver interface
+func (r *TerminalRenderer) OnConflictFound(c engine.Conflict) {
+	r.conflicts = append(r.conflicts, c)
+}
+
+func (r *TerminalRenderer) Render() {
+	if len(r.conflicts) == 0 {
+		fmt.Println("✅ No license conflicts detected!")
 		return
 	}
 
-	fmt.Printf("WARNING:  Found %d license conflicts\n\n", len(conflicts))
+	fmt.Printf("WARNING:  Found %d license conflicts\n\n", len(r.conflicts))
 
-	for i, c := range conflicts {
+	for i, c := range r.conflicts {
 		fmt.Printf("CONFLICT %d — %s\n", i+1, c.Type)
 		fmt.Printf("Path: %s\n", strings.Join(c.Path, " → "))
 		fmt.Printf("What this means: %s\n", c.Description)
