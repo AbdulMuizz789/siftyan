@@ -35,9 +35,11 @@ func main() {
 				return
 			}
 
-			allConflicts := []engine.Conflict{}
-			detector := engine.NewConflictDetector()
 			renderer := report.NewTerminalRenderer()
+			detector := engine.NewConflictDetector(
+				engine.WithModel(model),
+				engine.WithObserver(renderer),
+			)
 
 			for _, file := range files {
 				fmt.Printf("Scanning %s...\n", file)
@@ -49,15 +51,14 @@ func main() {
 
 				root, err := p.Parse(file)
 				if err != nil {
-					fmt.Printf("Error parsing %s: %v\n", file, err)
+					fmt.Printf("Error parsing %s: %v\n", err)
 					continue
 				}
 
-				conflicts := detector.Detect(root, model)
-				allConflicts = append(allConflicts, conflicts...)
+				detector.Detect(root)
 			}
 
-			renderer.Render(allConflicts)
+			renderer.Render()
 		},
 	}
 
