@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"siftyan/internal/engine"
+	"siftyan/internal/enricher"
 	"siftyan/internal/parser"
 	"siftyan/internal/report"
 
@@ -40,6 +41,7 @@ func main() {
 				engine.WithModel(model),
 				engine.WithObserver(renderer),
 			)
+			pypiEnricher := enricher.NewPyPIEnricher()
 
 			for _, file := range files {
 				fmt.Printf("Scanning %s...\n", file)
@@ -51,9 +53,12 @@ func main() {
 
 				root, err := p.Parse(file)
 				if err != nil {
-					fmt.Printf("Error parsing %s: %v\n", err)
+					fmt.Printf("Error parsing %s: %v\n", file, err)
 					continue
 				}
+
+				// Enrich pip dependencies
+				pypiEnricher.EnrichTree(root)
 
 				detector.Detect(root)
 			}
