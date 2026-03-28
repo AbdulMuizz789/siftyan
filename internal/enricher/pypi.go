@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"siftyan/internal/parser"
 	"strings"
 	"time"
 )
@@ -25,6 +26,20 @@ func NewPyPIEnricher() *PyPIEnricher {
 		client: &http.Client{
 			Timeout: 5 * time.Second,
 		},
+	}
+}
+
+// EnrichTree traverses the tree and enriches pip dependencies
+func (e *PyPIEnricher) EnrichTree(dep *parser.Dependency) {
+	if dep.Ecosystem == "pip" && (dep.License == "UNKNOWN" || dep.License == "") {
+		license, err := e.Enrich(dep.Name)
+		if err == nil && license != "UNKNOWN" {
+			dep.License = parser.NormalizeLicense(license)
+		}
+	}
+
+	for _, child := range dep.Dependencies {
+		e.EnrichTree(child)
 	}
 }
 
