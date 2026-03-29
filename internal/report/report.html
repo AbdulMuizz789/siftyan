@@ -1,0 +1,252 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Siftyan License Report</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+        line-height: 1.6;
+        color: #333;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .conflict {
+        background: #fff5f5;
+        border: 1px solid #feb2b2;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        border-left: 6px solid #f56565;
+      }
+      .impact-HIGH {
+        color: #c53030;
+        font-weight: bold;
+        background: #fff5f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+      .impact-MEDIUM {
+        color: #975a16;
+        font-weight: bold;
+        background: #fffff0;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+      .impact-LOW {
+        color: #276749;
+        font-weight: bold;
+        background: #f0fff4;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+      #graph {
+        width: 100%;
+        height: 500px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #f8fafc;
+        margin-bottom: 30px;
+        cursor: move;
+      }
+      h1 {
+        color: #2d3748;
+        border-bottom: 2px solid #edf2f7;
+        padding-bottom: 10px;
+      }
+      h2 {
+        color: #4a5568;
+        margin-top: 40px;
+      }
+      .path {
+        font-family: monospace;
+        background: #edf2f7;
+        padding: 8px;
+        border-radius: 4px;
+        display: inline-block;
+      }
+      .node circle {
+        cursor: pointer;
+        stroke: #3182ce;
+        stroke-width: 1.5px;
+      }
+      .node text {
+        font: 12px sans-serif;
+        pointer-events: none;
+      }
+      path.link {
+        fill: none;
+        stroke: #cbd5e0;
+        stroke-width: 2px;
+      }
+      .instructions {
+        font-size: 0.9em;
+        color: #718096;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Siftyan License Report</h1>
+
+      <h2>Dependency Graph</h2>
+      <div class="instructions">
+        Tip: Scroll to zoom, drag to pan, click circles to expand/collapse.
+      </div>
+      <div id="graph"></div>
+
+      <h2>Conflicts Found</h2>
+      {{range $idx, $c := .Conflicts}}
+      <div class="conflict">
+        <h3>{{$c.Type}}</h3>
+        <div class="path">
+          Path: {{range $i, $p := $c.Path}}{{if $i}} &rarr; {{end}}{{$p}}{{end}}
+        </div>
+        <p>
+          <strong>Impact:</strong>
+          <span class="impact-{{$c.Impact}}">{{$c.Impact}}</span>
+        </p>
+        <p><strong>Description:</strong> {{$c.Description}}</p>
+        <p><strong>Suggested Actions:</strong></p>
+        <ul>
+          {{range $s := $c.Suggestions}}
+          <li>{{$s}}</li>
+          {{end}}
+        </ul>
+      </div>
+      {{else}}
+      <p style="color: #38a169; font-weight: bold; font-size: 1.2em">
+        No license conflicts detected!
+      </p>
+      {{end}}
+    </div>
+
+    <script>
+      const treeData = {{.TreeJSON}};
+
+      const graphDiv = document.getElementById('graph');
+      const width = graphDiv.clientWidth;
+      const height = 500;
+      const nodeWidth = 200;
+      const nodeHeight = 50;
+
+      const root = d3.hierarchy(treeData, d => d.dependencies);
+
+      const svg = d3.select("#graph").append("svg")
+          .attr("width", "100%")
+          .attr("height", height);
+
+      const g = svg.append("g");
+
+      const zoom = d3.zoom()
+          .scaleExtent([0.5, 3])
+          .on("zoom", (event) => {
+              g.attr("transform", event.transform);
+          });
+
+      svg.call(zoom);
+      svg.call(zoom.transform, d3.zoomIdentity.translate(200, height / 2));
+
+      const tree = d3.tree().nodeSize([nodeHeight, nodeWidth]);
+
+      function update(source) {
+          const nodes = tree(root).descendants();
+          const links = nodes.slice(1);
+
+          nodes.forEach(d => { d.y = d.depth * nodeWidth; });
+
+          const node = g.selectAll("g.node")
+              .data(nodes, d => d.id || (d.id = Math.random()));
+
+          const nodeEnter = node.enter().append("g")
+              .attr("class", "node")
+              .attr("transform", d => "translate(" + (source.y0 || 0) + "," + (source.x0 || 0) + ")")
+              .on("click", (event, d) => {
+                  if (d.children) {
+                      d._children = d.children;
+                      d.children = null;
+                  } else if (d._children) {
+                      d.children = d._children;
+                      d._children = null;
+                  }
+                  update(d);
+              });
+
+          nodeEnter.append("circle")
+              .attr("r", 7)
+              .style("fill", d => d._children ? "#3182ce" : "#fff");
+
+          nodeEnter.append("text")
+              .attr("dy", ".35em")
+              .attr("x", d => d.children || d._children ? -15 : 15)
+              .attr("text-anchor", d => d.children || d._children ? "end" : "start")
+              .text(d => d.data.name + " (" + (d.data.license || "???") + ")")
+              .clone(true).lower()
+              .attr("stroke", "white")
+              .attr("stroke-width", 3);
+
+          const nodeUpdate = nodeEnter.merge(node);
+
+          nodeUpdate.transition().duration(400)
+              .attr("transform", d => "translate(" + d.y + "," + d.x + ")");
+
+          nodeUpdate.select("circle")
+              .style("fill", d => d._children ? "#3182ce" : "#fff");
+
+          const nodeExit = node.exit().transition().duration(400)
+              .attr("transform", d => "translate(" + (source.y || 0) + "," + (source.x || 0) + ")")
+              .remove();
+
+          const link = g.selectAll("path.link")
+              .data(links, d => d.id);
+
+          const linkEnter = link.enter().insert("path", "g")
+              .attr("class", "link")
+              .attr("d", d => {
+                  const o = {x: source.x0 || 0, y: source.y0 || 0};
+                  return diagonal(o, o);
+              });
+
+          linkEnter.merge(link).transition().duration(400)
+              .attr("d", d => diagonal(d.parent, d));
+
+          link.exit().transition().duration(400)
+              .attr("d", d => {
+                  const o = {x: source.x, y: source.y};
+                  return diagonal(o, o);
+              })
+              .remove();
+
+          nodes.forEach(d => {
+              d.x0 = d.x;
+              d.y0 = d.y;
+          });
+      }
+
+      function diagonal(s, d) {
+          return "M " + s.y + " " + s.x +
+                 "C " + (s.y + d.y) / 2 + " " + s.x +
+                 ", " + (s.y + d.y) / 2 + " " + d.x +
+                 ", " + d.y + " " + d.x;
+      }
+
+      root.x0 = 0;
+      root.y0 = 0;
+
+      if (root.children) {
+          root.children.forEach(c => {
+              if (c.children) {
+                  c._children = c.children;
+                  c.children = null;
+              }
+          });
+      }
+
+      update(root);
+    </script>
+  </body>
+</html>
