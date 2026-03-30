@@ -11,6 +11,7 @@ const (
 	CopyleftPropagation ConflictType = "Copyleft Propagation"
 	NetworkCopyleft     ConflictType = "Network Copyleft"
 	LicenseAmbiguity    ConflictType = "License Ambiguity"
+	LinkingException    ConflictType = "Copyleft with Linking Exception"
 )
 
 type Conflict struct {
@@ -67,45 +68,32 @@ func (d *ConflictDetector) notify(c Conflict) {
 
 // Detect analyzes the dependency tree for conflicts and notifies observers
 func (d *ConflictDetector) Detect(root *parser.Dependency) {
-	d.traverse(root, []string{root.Name})
+	rules := GetRulesForModel(d.model)
+	d.traverse(root, []string{root.Name}, rules)
 }
 
-func (d *ConflictDetector) traverse(dep *parser.Dependency, currentPath []string) {
+func (d *ConflictDetector) traverse(dep *parser.Dependency, currentPath []string, rules []Rule) {
 	licenseType := d.registry.GetType(dep.License)
 
-	// Detect Network Copyleft (AGPL) - Critical for SaaS and Binary
-	if licenseType == NetworkCopyleftLT {
-		d.notify(Conflict{
-			Type:        NetworkCopyleft,
-			Path:        append([]string{}, currentPath...),
-			Description: "AGPL-3.0 detected. Requires source disclosure even for network services.",
-			Impact:      "HIGH",
-			Suggestions: []string{"Replace with a permissive alternative", "Isolate as a separate microservice (if legal allows)"},
-		})
-	}
-
-	// Detect Copyleft Propagation - Depends on Model
+	// Apply model-specific rules
 	// TODO: Check the root project's license
 	// For simplicity, we assume the root is Permissive if not otherwise specified
-	if licenseType == StrongCopyleftLT {
-		switch d.model {
-		case "binary":
-			// If model is binary, this is a HIGH impact conflict for permissive projects
+	for _, rule := range rules {
+		if licenseType == rule.TargetType {
+			ctype := CopyleftPropagation
+			switch licenseType {
+			case NetworkCopyleftLT:
+				ctype = NetworkCopyleft
+			case WeakCopyleftLT:
+				ctype = LinkingException
+			}
+
 			d.notify(Conflict{
-				Type:        CopyleftPropagation,
+				Type:        ctype,
 				Path:        append([]string{}, currentPath...),
-				Description: "Strong Copyleft detected in a binary distribution. This triggers the 'viral' clause.",
-				Impact:      "HIGH",
-				Suggestions: []string{"Replace this dependency", "Change your project license to GPL"},
-			})
-		case "saas":
-			// In SaaS, standard GPL is often acceptable (unlike AGPL)
-			d.notify(Conflict{
-				Type:        CopyleftPropagation,
-				Path:        append([]string{}, currentPath...),
-				Description: "Strong Copyleft detected. Acceptable for internal SaaS use, but verify no client-side code is included.",
-				Impact:      "LOW",
-				Suggestions: []string{"Verify that this code is not shipped to the browser"},
+				Description: rule.Description,
+				Impact:      rule.Impact,
+				Suggestions: rule.Suggestions,
 			})
 		}
 	}
@@ -123,6 +111,6 @@ func (d *ConflictDetector) traverse(dep *parser.Dependency, currentPath []string
 
 	for _, child := range dep.Dependencies {
 		newPath := append(currentPath, child.Name)
-		d.traverse(child, newPath)
+		d.traverse(child, newPath, rules)
 	}
 }
