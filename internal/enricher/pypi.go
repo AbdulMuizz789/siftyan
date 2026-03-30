@@ -31,7 +31,7 @@ func NewPyPIEnricher() *PyPIEnricher {
 
 // EnrichTree traverses the tree and enriches pip dependencies
 func (e *PyPIEnricher) EnrichTree(dep *parser.Dependency) {
-	if dep.Ecosystem == "pip" && (dep.License == "UNKNOWN" || dep.License == "") {
+	if dep.Depth > 0 && dep.Ecosystem == "pip" && (dep.License == "UNKNOWN" || dep.License == "") {
 		license, err := e.Enrich(dep.Name)
 		if err == nil && license != "UNKNOWN" {
 			dep.License = parser.NormalizeLicense(license)
