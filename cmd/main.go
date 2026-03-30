@@ -41,8 +41,18 @@ func main() {
 			renderer := report.NewTerminalRenderer()
 			pypiEnricher := enricher.NewPyPIEnricher()
 
+			// Create a virtual root for the entire workspace to hold all discovered project trees
+			workspaceRoot := &parser.Dependency{
+				Name:      "Workspace",
+				Ecosystem: "workspace",
+				License:   "N/A",
+				Depth:     0,
+			}
+
 			var htmlRenderer *report.HTMLRenderer
-			var combinedRoot *parser.Dependency
+			if reportPath != "" {
+				htmlRenderer = report.NewHTMLRenderer(workspaceRoot)
+			}
 
 			parserOpts := parser.ParserOptions{
 				IncludeDev: includeDev,
@@ -65,27 +75,24 @@ func main() {
 				// Enrich pip dependencies
 				pypiEnricher.EnrichTree(root)
 
-				// Initialize combined root for HTML report
-				if combinedRoot == nil {
-					combinedRoot = root
-					if reportPath != "" {
-						htmlRenderer = report.NewHTMLRenderer(combinedRoot)
-					}
-				} else {
-					combinedRoot.Dependencies = append(combinedRoot.Dependencies, root.Dependencies...)
-				}
+				// Add this project tree to the workspace
+				workspaceRoot.Dependencies = append(workspaceRoot.Dependencies, root)
+			}
 
-				// Create detector with observers
-				opts := []engine.Option{
-					engine.WithModel(model),
-					engine.WithObserver(renderer),
-				}
-				if htmlRenderer != nil {
-					opts = append(opts, engine.WithObserver(htmlRenderer))
-				}
+			// Create detector with observers
+			opts := []engine.Option{
+				engine.WithModel(model),
+				engine.WithObserver(renderer),
+			}
+			if htmlRenderer != nil {
+				opts = append(opts, engine.WithObserver(htmlRenderer))
+			}
 
-				detector := engine.NewConflictDetector(opts...)
-				detector.Detect(root)
+			detector := engine.NewConflictDetector(opts...)
+
+			// Run detection on each discovered project tree
+			for _, projectRoot := range workspaceRoot.Dependencies {
+				detector.Detect(projectRoot)
 			}
 
 			renderer.Render()
