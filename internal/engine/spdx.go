@@ -35,6 +35,8 @@ func GetSPDXRegistry() *SPDXRegistry {
 				"BSD-3-Clause": PermissiveLT,
 				"BSD-2-Clause": PermissiveLT,
 				"LGPL-3.0":     WeakCopyleftLT,
+				"LGPL-2.1":     WeakCopyleftLT,
+				"MPL-2.0":      WeakCopyleftLT,
 				"GPL-2.0":      StrongCopyleftLT,
 				"GPL-3.0":      StrongCopyleftLT,
 				"AGPL-3.0":     NetworkCopyleftLT,

@@ -40,9 +40,15 @@ func NormalizeLicense(license string) string {
 			return "GPL-3.0"
 		}
 		if strings.Contains(l, "2") {
+			if strings.Contains(l, "LOWER") || strings.Contains(l, "LGPL") {
+				return "LGPL-2.1"
+			}
 			return "GPL-2.0"
 		}
 		return "GPL-3.0"
+	}
+	if strings.Contains(l, "MPL") {
+		return "MPL-2.0"
 	}
 
 	return license
