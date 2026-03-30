@@ -17,14 +17,13 @@ func NewTerminalRenderer() *TerminalRenderer {
 	}
 }
 
-// OnConflictFound implements the ConflictObserver interface
 func (r *TerminalRenderer) OnConflictFound(c engine.Conflict) {
 	r.conflicts = append(r.conflicts, c)
 }
 
 func (r *TerminalRenderer) Render() {
 	if len(r.conflicts) == 0 {
-		fmt.Println("✅ No license conflicts detected!")
+		fmt.Println("OK: No license conflicts detected!")
 		return
 	}
 

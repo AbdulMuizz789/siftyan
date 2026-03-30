@@ -38,11 +38,17 @@ type npmPackage struct {
 // NpmParser responsible for parsing npm lockfiles and extracting dependency information.
 type NpmParser struct {
 	BaseParser
+	IncludeDev bool
 }
 
 func NewNpmParser() *NpmParser {
 	p := &NpmParser{}
 	p.Decoder = p.decode
+	return p
+}
+
+func (p *NpmParser) WithIncludeDev(include bool) *NpmParser {
+	p.IncludeDev = include
 	return p
 }
 
@@ -80,6 +86,11 @@ func (p *NpmParser) decode(data []byte) (*Dependency, error) {
 		// Only include direct dependencies for now (not nested in node_modules/...)
 		// In npm v2/v3, "packages" keys look like "node_modules/name"
 		if !isDirectDependency(pkgPath) {
+			continue
+		}
+
+		// Filter out dev dependencies unless requested
+		if pkg.Dev && !p.IncludeDev {
 			continue
 		}
 

@@ -110,7 +110,7 @@ func (d *ConflictDetector) traverse(dep *parser.Dependency, currentPath []string
 	}
 
 	for _, child := range dep.Dependencies {
-		newPath := append(currentPath, child.Name)
+		newPath := append(append([]string(nil), currentPath...), child.Name)
 		d.traverse(child, newPath, rules)
 	}
 }

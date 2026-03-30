@@ -6,12 +6,17 @@ import (
 	"path/filepath"
 )
 
+// ParserOptions defines configuration for the lockfile parsers
+type ParserOptions struct {
+	IncludeDev bool
+}
+
 // NewForFile returns the appropriate parser for a given lockfile name
-func NewForFile(filename string) (LockfileParser, error) {
+func NewForFile(filename string, opts ParserOptions) (LockfileParser, error) {
 	base := filepath.Base(filename)
 	switch base {
 	case "package-lock.json":
-		return NewNpmParser(), nil
+		return NewNpmParser().WithIncludeDev(opts.IncludeDev), nil
 	case "requirements.txt":
 		return NewPipParser(), nil
 	default:

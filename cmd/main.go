@@ -13,6 +13,7 @@ import (
 
 var model string
 var reportPath string
+var includeDev bool
 
 func main() {
 	var rootCmd = &cobra.Command{
@@ -43,9 +44,13 @@ func main() {
 			var htmlRenderer *report.HTMLRenderer
 			var combinedRoot *parser.Dependency
 
+			parserOpts := parser.ParserOptions{
+				IncludeDev: includeDev,
+			}
+
 			for _, file := range files {
 				fmt.Printf("Scanning %s...\n", file)
-				p, err := parser.NewForFile(file)
+				p, err := parser.NewForFile(file, parserOpts)
 				if err != nil {
 					fmt.Printf("Error creating parser: %v\n", err)
 					continue
@@ -97,6 +102,7 @@ func main() {
 
 	scanCmd.Flags().StringVarP(&model, "model", "m", "internal", "Distribution model (saas|binary|internal)")
 	scanCmd.Flags().StringVarP(&reportPath, "report", "r", "", "Path to generate HTML report (e.g., report.html)")
+	scanCmd.Flags().BoolVar(&includeDev, "include-dev", false, "Include development dependencies in the scan")
 	rootCmd.AddCommand(scanCmd)
 
 	if err := rootCmd.Execute(); err != nil {
