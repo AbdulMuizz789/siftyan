@@ -127,6 +127,21 @@
 
     <script>
       const treeData = {{.TreeJSON}};
+      const conflicts = {{.ConflictsJSON}};
+
+      // Build a set of paths that are in conflict for quick lookup
+      const conflictPaths = new Set();
+      const conflictNodes = new Set();
+      conflicts.forEach(c => {
+          for (let i = 0; i < c.Path.length; i++) {
+              const nodeName = c.Path[i];
+              conflictNodes.add(nodeName);
+              if (i > 0) {
+                  const edge = c.Path[i-1] + "->" + c.Path[i];
+                  conflictPaths.add(edge);
+              }
+          }
+      });
 
       const graphDiv = document.getElementById('graph');
       const width = graphDiv.clientWidth;
@@ -178,12 +193,16 @@
 
           nodeEnter.append("circle")
               .attr("r", 7)
-              .style("fill", d => d._children ? "#3182ce" : "#fff");
+              .style("stroke", d => conflictNodes.has(d.data.name) ? "#f56565" : "#3182ce")
+              .style("stroke-width", d => conflictNodes.has(d.data.name) ? "3px" : "1.5px")
+              .style("fill", d => d._children ? (conflictNodes.has(d.data.name) ? "#f56565" : "#3182ce") : "#fff");
 
           nodeEnter.append("text")
               .attr("dy", ".35em")
               .attr("x", d => d.children || d._children ? -15 : 15)
               .attr("text-anchor", d => d.children || d._children ? "end" : "start")
+              .style("fill", d => conflictNodes.has(d.data.name) ? "#c53030" : "#333")
+              .style("font-weight", d => conflictNodes.has(d.data.name) ? "bold" : "normal")
               .text(d => d.data.name + " (" + (d.data.license || "???") + ")")
               .clone(true).lower()
               .attr("stroke", "white")
@@ -195,7 +214,8 @@
               .attr("transform", d => "translate(" + d.y + "," + d.x + ")");
 
           nodeUpdate.select("circle")
-              .style("fill", d => d._children ? "#3182ce" : "#fff");
+              .style("stroke", d => conflictNodes.has(d.data.name) ? "#f56565" : "#3182ce")
+              .style("fill", d => d._children ? (conflictNodes.has(d.data.name) ? "#f56565" : "#3182ce") : "#fff");
 
           const nodeExit = node.exit().transition().duration(400)
               .attr("transform", d => "translate(" + (source.y || 0) + "," + (source.x || 0) + ")")
@@ -206,13 +226,16 @@
 
           const linkEnter = link.enter().insert("path", "g")
               .attr("class", "link")
+              .style("stroke", d => conflictPaths.has(d.parent.data.name + "->" + d.data.name) ? "#feb2b2" : "#cbd5e0")
+              .style("stroke-width", d => conflictPaths.has(d.parent.data.name + "->" + d.data.name) ? "3px" : "2px")
               .attr("d", d => {
                   const o = {x: source.x0 || 0, y: source.y0 || 0};
                   return diagonal(o, o);
               });
 
           linkEnter.merge(link).transition().duration(400)
-              .attr("d", d => diagonal(d.parent, d));
+              .attr("d", d => diagonal(d.parent, d))
+              .style("stroke", d => conflictPaths.has(d.parent.data.name + "->" + d.data.name) ? "#feb2b2" : "#cbd5e0");
 
           link.exit().transition().duration(400)
               .attr("d", d => {
