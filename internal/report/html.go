@@ -3,6 +3,7 @@ package report
 import (
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"os"
 	"siftyan/internal/engine"
 	"siftyan/internal/parser"
@@ -34,8 +35,14 @@ func (r *HTMLRenderer) WriteReport(outputPath string) error {
 		return err
 	}
 
-	treeJSON, _ := json.Marshal(r.Tree)
-	conflictsJSON, _ := json.Marshal(r.Conflicts)
+	treeJSON, err := json.Marshal(r.Tree)
+	if err != nil {
+		return fmt.Errorf("failed to marshal dependency tree: %w", err)
+	}
+	conflictsJSON, err := json.Marshal(r.Conflicts)
+	if err != nil {
+		return fmt.Errorf("failed to marshal conflicts: %w", err)
+	}
 
 	f, err := os.Create(outputPath)
 	if err != nil {
