@@ -35,6 +35,7 @@ func (r *HTMLRenderer) WriteReport(outputPath string) error {
 	}
 
 	treeJSON, _ := json.Marshal(r.Tree)
+	conflictsJSON, _ := json.Marshal(r.Conflicts)
 
 	f, err := os.Create(outputPath)
 	if err != nil {
@@ -43,11 +44,13 @@ func (r *HTMLRenderer) WriteReport(outputPath string) error {
 	defer f.Close()
 
 	data := struct {
-		Conflicts []engine.Conflict
-		TreeJSON  string
+		Conflicts     []engine.Conflict
+		TreeJSON      string
+		ConflictsJSON string
 	}{
-		Conflicts: r.Conflicts,
-		TreeJSON:  string(treeJSON),
+		Conflicts:     r.Conflicts,
+		TreeJSON:      string(treeJSON),
+		ConflictsJSON: string(conflictsJSON),
 	}
 
 	return tmpl.Execute(f, data)
