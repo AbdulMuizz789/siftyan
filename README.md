@@ -165,12 +165,21 @@ Siftyan maps licenses to their SPDX categories for conflict analysis:
 
 ---
 
-## Roadmap
+## Future Enhancements
 
-- [ ] Support for Maven, Cargo, and Go Modules
-- [ ] CI/CD and GitHub Actions integration
-- [ ] Automatic dependency replacement suggestions
-- [ ] Web dashboard
+- Support for Maven, Cargo, and Go Modules
+- Automatic dependency replacement suggestions
+- Web dashboard
+- Sophisticated project license parser
+
+---
+
+## Contributing
+
+We will be opening *contributions* soon.
+
+**STAR**, **WATCH** this repo to stay updated. 
+We also welcome you to participate in the **[discussions](https://github.com/AbdulMuizz789/siftyan/discussions)**
 
 ---
 
