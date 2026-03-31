@@ -3,8 +3,21 @@ package parser
 import (
 	"bufio"
 	"os"
+	"path/filepath"
 	"strings"
+
+	"github.com/pelletier/go-toml/v2"
 )
+
+type pyproject struct {
+	Project struct {
+		Name    string `toml:"name"`
+		License struct {
+			Text string `toml:"text"`
+			File string `toml:"file"`
+		} `toml:"license"`
+	} `toml:"project"`
+}
 
 type PipParser struct {
 	BaseParser
@@ -26,8 +39,27 @@ func (p *PipParser) Parse(filePath string) (*Dependency, error) {
 	}
 	defer file.Close()
 
+	projectName := "python-project"
+	projectLicense := "UNKNOWN"
+
+	// Try to find pyproject.toml in the same directory to get project name and license
+	dir := filepath.Dir(filePath)
+	pyprojectPath := filepath.Join(dir, "pyproject.toml")
+	if data, err := os.ReadFile(pyprojectPath); err == nil {
+		var config pyproject
+		if err := toml.Unmarshal(data, &config); err == nil {
+			if config.Project.Name != "" {
+				projectName = config.Project.Name
+			}
+			if config.Project.License.Text != "" {
+				projectLicense = NormalizeLicense(config.Project.License.Text)
+			}
+		}
+	}
+
 	rootBuilder := NewDependencyBuilder().
-		Name("python-project").
+		Name(projectName).
+		License(projectLicense).
 		Ecosystem("pip").
 		Depth(0)
 
