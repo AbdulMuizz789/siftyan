@@ -31,6 +31,9 @@ type npmPackage struct {
 	// Dependencies is a map of dependencies
 	Dependencies map[string]string `json:"dependencies"`
 
+	// DevDependencies is only present in the root package usually
+	DevDependencies map[string]string `json:"devDependencies"`
+
 	// Dev indicates if this package is a development dependency
 	Dev bool `json:"dev"`
 }
@@ -62,68 +65,89 @@ func (p *NpmParser) decode(data []byte) (*Dependency, error) {
 		return nil, fmt.Errorf("failed to decode npm lockfile: %w", err)
 	}
 
-	// Root project info is in lock.Packages[""]
-	rootPkg, ok := lock.Packages[""]
+	// Build logical tree starting from root
+	return p.buildRecursive(lock.Name, "", lock.Packages, 0, make(map[string]bool))
+}
+
+func (p *NpmParser) buildRecursive(name string, path string, packages map[string]npmPackage, depth int, visited map[string]bool) (*Dependency, error) {
+	pkg, ok := packages[path]
 	if !ok {
-		return nil, fmt.Errorf("root project info not found in npm lockfile packages")
+		return nil, fmt.Errorf("package not found at path: %s", path)
 	}
 
-	rootBuilder := NewDependencyBuilder().
-		Name(lock.Name).
-		Version(rootPkg.Version).
-		License(NormalizeLicense(rootPkg.License)).
-		Ecosystem("npm").
-		Depth(0)
-
-	// Build the dependency tree
-	// TODO: we only collect direct dependencies listed in packages.
-	// A full tree builder would resolve transitive dependencies correctly
-	for pkgPath, pkg := range lock.Packages {
-		if pkgPath == "" {
-			continue
-		}
-
-		// Only include direct dependencies for now (not nested in node_modules/...)
-		// In npm v2/v3, "packages" keys look like "node_modules/name"
-		if !isDirectDependency(pkgPath) {
-			continue
-		}
-
-		// Filter out dev dependencies unless requested
-		if pkg.Dev && !p.IncludeDev {
-			continue
-		}
-
-		dep, err := NewDependencyBuilder().
-			Name(cleanNpmPackageName(pkgPath)).
+	// Prevent infinite recursion in case of cycles (rare in physical layout but good safety)
+	if visited[path] {
+		// Return a simplified dependency to break cycle
+		return NewDependencyBuilder().
+			Name(name + " (cycle)").
 			Version(pkg.Version).
 			License(NormalizeLicense(pkg.License)).
 			Ecosystem("npm").
-			Depth(1).
+			Depth(depth).
 			Build()
+	}
+	visited[path] = true
+	defer delete(visited, path)
 
-		if err == nil {
-			rootBuilder.AddDependency(dep)
+	builder := NewDependencyBuilder().
+		Name(name).
+		Version(pkg.Version).
+		License(NormalizeLicense(pkg.License)).
+		Ecosystem("npm").
+		Depth(depth)
+
+	// Combine dependencies and devDependencies (if at root and includeDev is true)
+	depsToResolve := make(map[string]string)
+	for k, v := range pkg.Dependencies {
+		depsToResolve[k] = v
+	}
+	if path == "" && p.IncludeDev {
+		for k, v := range pkg.DevDependencies {
+			depsToResolve[k] = v
 		}
 	}
 
-	return rootBuilder.Build()
-}
+	// Recursively add dependencies
+	for depName := range depsToResolve {
+		depPath := p.findPackagePath(path, depName, packages)
+		if depPath != "" {
+			childPkg := packages[depPath]
 
-func isDirectDependency(path string) bool {
-	// A direct dependency path looks like "node_modules/packageName"
-	// Nested dependencies look like "node_modules/A/node_modules/B"
-	// This is a simple heuristic.
-	parts := splitPath(path)
-	return len(parts) == 2 && parts[0] == "node_modules"
-}
+			// Respect IncludeDev flag for non-root dependencies
+			if childPkg.Dev && !p.IncludeDev {
+				continue
+			}
 
-func cleanNpmPackageName(path string) string {
-	parts := splitPath(path)
-	if len(parts) >= 2 && parts[0] == "node_modules" {
-		return parts[1]
+			child, err := p.buildRecursive(depName, depPath, packages, depth+1, visited)
+			if err == nil {
+				builder.AddDependency(child)
+			}
+		}
 	}
-	return path
+
+	return builder.Build()
+}
+
+func (p *NpmParser) findPackagePath(currentPath string, depName string, packages map[string]npmPackage) string {
+	// npm looks for dependencies in node_modules/ at the current level, then parents
+	parts := splitPath(currentPath)
+	if currentPath == "" {
+		parts = []string{}
+	}
+
+	// Check from deepest level to root
+	for i := len(parts); i >= 0; i-- {
+		prefix := ""
+		if i > 0 {
+			prefix = strings.Join(parts[:i], "/") + "/"
+		}
+		path := prefix + "node_modules/" + depName
+		if _, ok := packages[path]; ok {
+			return path
+		}
+	}
+
+	return ""
 }
 
 func splitPath(path string) []string {
