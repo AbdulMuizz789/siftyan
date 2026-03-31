@@ -1,227 +1,179 @@
 # Siftyan
 
-## 📌 Project Overview
-**Siftyan** is a local **CLI (Command-Line Interface)** tool written in **Go** that scans a project's dependencies to detect **software license conflicts**.
+**Siftyan** is a local-first CLI tool written in Go that scans your project's dependency tree and detects software license conflicts — before they become legal problems.
 
-It analyzes dependencies from package managers such as:
-
-- Python (`pip`)
-- Node.js (`npm`)
-
-Siftyan identifies license types used by each dependency and detects **incompatible license combinations**. It explains conflicts in **simple English**, shows the **cause of the conflict**, and suggests **possible solutions**.
-
-The tool outputs:
-
-- A **terminal summary**
-- A **detailed HTML report**
-- An **interactive dependency graph**
+It supports **npm** (`package-lock.json`) and **pip** (`requirements.txt`) ecosystems, identifies incompatible license combinations relative to your distribution model, and explains conflicts in plain English with actionable suggestions.
 
 ---
 
-## 🎯 Problem Statement
-Modern software projects rely heavily on third-party libraries. These libraries come with different **software licenses** (MIT, GPL, Apache, BSD, etc.).
+## Features
 
-Some licenses have restrictions that may **conflict with other licenses or the project's license**, which can cause legal or distribution issues.
-
-Developers often detect these conflicts **very late in development**.
-
-**Siftyan solves this problem** by automatically scanning dependencies and clearly explaining conflicts.
-
----
-
-## 🚀 Features
-
-- 🔍 **Dependency Scanner**
-  - Detects dependencies from project files such as:
-    - `requirements.txt`
-    - `package.json`
-
-- 📜 **License Detection**
-  - Identifies licenses used by each dependency.
-
-- ⚠️ **Conflict Detection**
-  - Finds incompatible licenses.
-
-- 💬 **Plain English Explanation**
-  - Explains license conflicts in simple language.
-
-- 🔎 **Cause Identification**
-  - Shows why the conflict happened.
-
-- 🛠 **Suggested Solutions**
-  - Suggests actions such as replacing dependencies.
-
-- 🖥 **Terminal Summary**
-  - Displays quick results directly in CLI.
-
-- 🌐 **HTML Report**
-  - Generates a detailed report with:
-    - dependency list
-    - license information
-    - conflict explanation
-    - interactive dependency graph
+- **Automatic lockfile detection** — finds `package-lock.json` and `requirements.txt` in the current directory
+- **License conflict detection** — identifies Copyleft Propagation, Network Copyleft, Linking Exceptions, and License Ambiguity
+- **Distribution model awareness** — conflict severity adapts to how you ship software (`saas`, `binary`, or `internal`)
+- **PyPI enrichment** — fetches live license data for pip packages via the PyPI API (concurrent, cached)
+- **Interactive HTML report** — D3.js dependency graph with clickable, conflict-highlighted nodes
+- **Terminal summary** — instant results directly in your shell
+- **Dev dependency control** — optionally include or exclude dev dependencies from the scan
 
 ---
 
-## 🏗 System Architecture
+## Installation
 
-```
-Project Directory
-        │
-        ▼
-Dependency Scanner
-(requirements.txt / package.json)
-        │
-        ▼
-License Detector
-        │
-        ▼
-Conflict Analyzer
-        │
-        ▼
-Output Generator
-   ├── CLI Summary
-   └── HTML Report + Dependency Graph
-```
-
----
-
-## 🛠 Tech Stack
-
-- **Language:** Go (Golang)
-- **CLI Framework:** Cobra (optional)
-- **Graph Visualization:** D3.js / Go HTML templates
-- **Dependency Parsing:** JSON / Text parsing
-
----
-
-## ⚙️ Installation
-
-### 1️⃣ Clone the repository
+**Prerequisites:** Go 1.21+
 
 ```bash
 git clone https://github.com/yourusername/siftyan.git
 cd siftyan
+go build -o siftyan cmd/main.go
 ```
 
-### 2️⃣ Build the CLI tool
+---
 
-```bash
-go build -o siftyan
-```
+## Usage
 
-### 3️⃣ Run the tool
+Run inside any project directory:
 
 ```bash
 ./siftyan scan
 ```
 
----
+### Options
 
-## ▶️ Usage
+| Flag | Default | Description |
+|---|---|---|
+| `--model`, `-m` | `internal` | Distribution model: `saas`, `binary`, or `internal` |
+| `--report`, `-r` | _(none)_ | Output path for an HTML report (e.g. `report.html`) |
+| `--include-dev` | `false` | Include development dependencies in the scan |
 
-Run Siftyan inside any project directory.
-
-```bash
-siftyan scan
-```
-
-Example output:
-
-```
-Scanning project dependencies...
-
-Found 28 dependencies
-Detected 2 license conflicts
-
-Conflict 1:
-Dependency: library-x
-License: GPL-3.0
-Project License: MIT
-
-Explanation:
-GPL requires derivative works to also use GPL license.
-
-Suggested Fix:
-Replace the dependency or change project license.
-```
-
----
-
-## 📊 Generate HTML Report
-
-To generate a detailed HTML report:
+### Examples
 
 ```bash
-siftyan scan --report
+# Scan with binary distribution model
+./siftyan scan --model binary
+
+# Generate an HTML report
+./siftyan scan --report report.html
+
+# Include dev dependencies
+./siftyan scan --include-dev
+
+# Full scan with all options
+./siftyan scan --model saas --report report.html --include-dev
 ```
-
-This report includes:
-
-- Full dependency tree
-- License details
-- Conflict explanations
-- Suggested fixes
-- Interactive dependency graph
 
 ---
 
-## 📂 Project Structure
+## Distribution Models
+
+Siftyan adjusts conflict severity based on how you distribute your software:
+
+| Model | Description |
+|---|---|
+| `internal` | Internal tooling only — most restrictive licenses are low risk |
+| `saas` | Hosted service — AGPL is high risk even without binary distribution |
+| `binary` | Shipped to end users — GPL and AGPL are high risk due to copyleft propagation |
+
+---
+
+## Conflict Types
+
+| Type | Description |
+|---|---|
+| **Copyleft Propagation** | Strong copyleft license (GPL) may require your entire project to adopt the same license |
+| **Network Copyleft** | AGPL extends copyleft to network-accessible software |
+| **Copyleft with Linking Exception** | LGPL requires dynamic linking to use the linking exception |
+| **License Ambiguity** | Package has no license information — legal risk cannot be assessed automatically |
+
+---
+
+## Example Output
+
+```
+Scanning package-lock.json...
+
+WARNING: Found 2 license conflicts
+
+CONFLICT 1 — Copyleft Propagation
+Path: my-app → libA
+What this means: Strong Copyleft (GPL) in a binary distribution triggers the 'viral' clause.
+Impact: HIGH
+Suggested actions:
+  - Switch project license to GPL
+  - Replace dependency
+
+CONFLICT 2 — Network Copyleft
+Path: my-app → libB
+What this means: Network Copyleft (AGPL) is a high risk in distributed software.
+Impact: HIGH
+Suggested actions:
+  - Replace with a permissive alternative
+  - Consult legal
+```
+
+---
+
+## HTML Report
+
+The HTML report includes a full interactive dependency graph (powered by D3.js) with conflict nodes highlighted in red, plus a detailed breakdown of every conflict found.
+
+```bash
+./siftyan scan --report report.html
+open report.html
+```
+
+---
+
+## Project Structure
 
 ```
 siftyan/
-│
 ├── cmd/
-│   └── root.go
-│
-├── scanner/
-│   ├── pip_scanner.go
-│   └── npm_scanner.go
-│
-├── license/
-│   └── detector.go
-│
-├── analyzer/
-│   └── conflict_checker.go
-│
-├── report/
-│   ├── cli_output.go
-│   └── html_report.go
-│
-├── web/
-│   └── graph_template.html
-│
-├── main.go
-└── README.md
+│   └── main.go               # CLI entry point (Cobra)
+├── internal/
+│   ├── engine/
+│   │   ├── conflict.go       # Conflict detection logic and observer pattern
+│   │   ├── model.go          # Distribution model rules
+│   │   └── spdx.go           # SPDX license registry (singleton)
+│   ├── enricher/
+│   │   └── pypi.go           # Concurrent PyPI metadata fetcher
+│   ├── parser/
+│   │   ├── factory.go        # Parser factory and lockfile detection
+│   │   ├── npm.go            # npm lockfile parser (v3)
+│   │   ├── pip.go            # pip requirements.txt parser
+│   │   ├── normalize.go      # License string normalization to SPDX
+│   │   └── types.go          # Dependency tree types and builder
+│   └── report/
+│       ├── terminal.go       # Terminal renderer
+│       ├── html.go           # HTML renderer
+│       └── report.html       # Embedded report template
+└── go.mod
 ```
 
 ---
 
-## 🔮 Future Improvements
+## Supported Licenses
 
-- Support for more ecosystems:
-  - Maven
-  - Cargo
-  - Go Modules
-- CI/CD integration
-- GitHub Action support
-- Automatic dependency replacement suggestions
-- Web dashboard
+Siftyan maps licenses to their SPDX categories for conflict analysis:
 
----
-
-## 🤝 Contributing
-
-We are not welcoming contributions yet. When the project is out of initial development, we will open contributions soon.
+| Category | Examples |
+|---|---|
+| Permissive | MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, CC0-1.0 |
+| Weak Copyleft | LGPL-2.1, LGPL-3.0, MPL-2.0, EPL-2.0, EUPL-1.2 |
+| Strong Copyleft | GPL-2.0, GPL-3.0 |
+| Network Copyleft | AGPL-3.0 |
 
 ---
 
-## 📄 License
-This project is licensed under the **GNU General Public License v3.0** or later.
+## Roadmap
 
-See [COPYING](COPYING) for more details
+- [ ] Support for Maven, Cargo, and Go Modules
+- [ ] CI/CD and GitHub Actions integration
+- [ ] Automatic dependency replacement suggestions
+- [ ] Web dashboard
 
 ---
 
-## 👨‍💻 Author
-Siftyan is designed to help developers **detect license conflicts early** and maintain **safe open-source compliance**.
+## License
+
+This project is licensed under the **GNU General Public License v3.0** or later. See `COPYING` for details.
