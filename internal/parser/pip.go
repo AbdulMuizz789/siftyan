@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/pelletier/go-toml/v2"
@@ -70,9 +71,12 @@ func (p *PipParser) Parse(filePath string) (*Dependency, error) {
 			continue
 		}
 
-		// Handle name==version or name>=version
 		name := line
 		version := "latest"
+		// Handle name==version or name>=version
+		re := regexp.MustCompile(`[><=!~^][^\s]*`)
+		name = strings.TrimSpace(re.ReplaceAllString(line, ""))
+
 		if strings.Contains(line, "==") {
 			parts := strings.Split(line, "==")
 			name = strings.TrimSpace(parts[0])

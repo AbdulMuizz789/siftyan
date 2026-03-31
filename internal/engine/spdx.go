@@ -40,6 +40,15 @@ func GetSPDXRegistry() *SPDXRegistry {
 				"GPL-2.0":      StrongCopyleftLT,
 				"GPL-3.0":      StrongCopyleftLT,
 				"AGPL-3.0":     NetworkCopyleftLT,
+				"ISC":          PermissiveLT,
+				"CC0-1.0":      PermissiveLT,
+				"Unlicense":    PermissiveLT,
+				"WTFPL":        PermissiveLT,
+				"PSF-2.0":      PermissiveLT, // Python packages
+				"Artistic-2.0": PermissiveLT,
+				"EPL-2.0":      WeakCopyleftLT,
+				"EUPL-1.2":     WeakCopyleftLT,
+				"CDDL-1.0":     WeakCopyleftLT,
 			},
 		}
 	})
