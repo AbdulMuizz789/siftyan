@@ -39,21 +39,25 @@ func (e *PyPIEnricher) EnrichTree(root *parser.Dependency) {
 	var deps []*parser.Dependency
 	collectPipDeps(root, &deps)
 
+	seen := make(map[*parser.Dependency]bool)
 	var wg sync.WaitGroup
 	for _, dep := range deps {
-		wg.Add(1)
-		// go routine for each dependency concurrently limited by semaphore
-		go func(d *parser.Dependency) {
-			defer wg.Done()
+		if !seen[dep] {
+			seen[dep] = true
+			wg.Add(1)
+			// go routine for each dependency concurrently limited by semaphore
+			go func(d *parser.Dependency) {
+				defer wg.Done()
 
-			e.sem <- struct{}{}        // acquire slot
-			defer func() { <-e.sem }() // release slot
+				e.sem <- struct{}{}        // acquire slot
+				defer func() { <-e.sem }() // release slot
 
-			license, err := e.Enrich(d.Name)
-			if err == nil && license != "UNKNOWN" {
-				d.License = parser.NormalizeLicense(license)
-			}
-		}(dep)
+				license, err := e.Enrich(d.Name)
+				if err == nil && license != "UNKNOWN" {
+					d.License = parser.NormalizeLicense(license)
+				}
+			}(dep)
+		}
 	}
 	wg.Wait()
 }

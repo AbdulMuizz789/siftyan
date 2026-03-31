@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/pelletier/go-toml/v2"
@@ -12,11 +11,8 @@ import (
 
 type pyproject struct {
 	Project struct {
-		Name    string `toml:"name"`
-		License struct {
-			Text string `toml:"text"`
-			File string `toml:"file"`
-		} `toml:"license"`
+		Name    string      `toml:"name"`
+		License interface{} `toml:"license"`
 	} `toml:"project"`
 }
 
@@ -43,7 +39,7 @@ func (p *PipParser) Parse(filePath string) (*Dependency, error) {
 	projectName := "python-project"
 	projectLicense := "UNKNOWN"
 
-	// Try to find pyproject.toml in the same directory to get project name and license
+	// Try to find pyproject.toml in the same directory
 	dir := filepath.Dir(filePath)
 	pyprojectPath := filepath.Join(dir, "pyproject.toml")
 	if data, err := os.ReadFile(pyprojectPath); err == nil {
@@ -52,8 +48,18 @@ func (p *PipParser) Parse(filePath string) (*Dependency, error) {
 			if config.Project.Name != "" {
 				projectName = config.Project.Name
 			}
-			if config.Project.License.Text != "" {
-				projectLicense = NormalizeLicense(config.Project.License.Text)
+
+			// Handle license as string or table (PEP 621)
+			switch l := config.Project.License.(type) {
+			case string:
+				projectLicense = NormalizeLicense(l)
+			case map[string]interface{}:
+				if text, ok := l["text"].(string); ok {
+					projectLicense = NormalizeLicense(text)
+				} else if file, ok := l["file"].(string); ok {
+					// Fallback to filename if text is not provided
+					projectLicense = "FILE:" + file
+				}
 			}
 		}
 	}
@@ -71,26 +77,51 @@ func (p *PipParser) Parse(filePath string) (*Dependency, error) {
 			continue
 		}
 
-		name := line
-		version := "latest"
-		// Handle name==version or name>=version
-		re := regexp.MustCompile(`[><=!~^][^\s]*`)
-		name = strings.TrimSpace(re.ReplaceAllString(line, ""))
+		// 1. Remove comments
+		if idx := strings.Index(line, "#"); idx != -1 {
+			line = strings.TrimSpace(line[:idx])
+		}
+		if line == "" {
+			continue
+		}
 
-		if strings.Contains(line, "==") {
-			parts := strings.Split(line, "==")
-			name = strings.TrimSpace(parts[0])
-			version = strings.TrimSpace(parts[1])
-		} else if strings.Contains(line, ">=") {
-			parts := strings.Split(line, ">=")
-			name = strings.TrimSpace(parts[0])
-			version = strings.TrimSpace(parts[1])
+		// 2. Remove environment markers (anything after ;)
+		spec := line
+		if idx := strings.Index(line, ";"); idx != -1 {
+			spec = strings.TrimSpace(line[:idx])
+		}
+
+		// 3. Extract name and version
+		name := spec
+		version := "latest"
+
+		// Handle common specifiers: ==, >=, <=, !=, ~=, >, <
+		operators := []string{"==", ">=", "<=", "!=", "~=", ">", "<"}
+		var foundOp string
+		var opIdx int = -1
+
+		for _, op := range operators {
+			if idx := strings.Index(spec, op); idx != -1 {
+				if opIdx == -1 || idx < opIdx {
+					opIdx = idx
+					foundOp = op
+				}
+			}
+		}
+
+		if opIdx != -1 {
+			name = strings.TrimSpace(spec[:opIdx])
+			version = strings.TrimSpace(spec[opIdx+len(foundOp):])
+			// If there are multiple specifiers (e.g. pkg>=1.0,<2.0), just take the first part
+			if idx := strings.Index(version, ","); idx != -1 {
+				version = strings.TrimSpace(version[:idx])
+			}
 		}
 
 		dep, err := NewDependencyBuilder().
 			Name(name).
 			Version(version).
-			License("UNKNOWN"). // Will be enriched later (maybe via PyPI API)
+			License("UNKNOWN"). // Will be enriched later via PyPI API
 			Ecosystem("pip").
 			Depth(1).
 			Build()
