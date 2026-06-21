@@ -19,7 +19,7 @@ We are committed to providing a welcoming and inclusive environment for all cont
 ## Report Issues 🪲
 **If you find a security vulnerability, DO NOT OPEN an issue. Please report it privately by emailing us at siftyan@outlook.com.**
 
-If you find a bug, have a feature request, or want to suggest an improvement, please open an issue on our GitHub repository. Before creating an issue, make sure to search for [existing issues](https://github.com/AbdulMuizz789/siftyan/issues) to avoid duplicates. Be sure to provide as much detail as possible, including steps to reproduce the issue if applicable and any relevant screenshots or error messages. Use the provided [issue template](ISSUE_TEMPLATE) to help us understand and address your issue more effectively.
+If you find a bug, have a feature request, or want to suggest an improvement, please open an issue on our GitHub repository. Before creating an issue, make sure to search for [existing issues](https://github.com/AbdulMuizz789/siftyan/issues) to avoid duplicates. Be sure to provide as much detail as possible, including steps to reproduce the issue if applicable and any relevant screenshots or error messages. Use the provided [issue templates](ISSUE_TEMPLATE) to help us understand and address your issue more effectively.
 
 ## Submit Code Contributions 💻 
 If you want to contribute code that changes more than one or two lines, please fork the repository and create a **new branch** for your changes. Once you've made your changes, submit a pull request with a *clear description* of what you've done and why. We will review your pull request and provide feedback. Testing your changes locally before submitting a pull request is highly recommended.
