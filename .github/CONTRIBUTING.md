@@ -47,9 +47,9 @@ The core contributors will review pull requests regularly to ensure that they me
 
 # Contributors
 ## Core Contributors
-- @AbdulNasir05
-- @AbdulMuizz789
-- @MdAbdulWaheed
+- [Abdul Nasir](https://github.com/AbdulNasir05)
+- [Abdul Muizz](https://github.com/AbdulMuizz789)
+- [Mohammad Abdul Waheed](https://github.com/MdAbdulWaheed)
 ---
 Thank you for your interest in contributing to Siftyan! We look forward to working with you to make this project even better.
 
