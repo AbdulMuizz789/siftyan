@@ -1,11 +1,11 @@
 # Table of Contents
 - [How to contribute to Siftyan](#how-to-contribute-to-siftyan)
-    - [Follow the Code of Conduct 📜](#follow-the-code-of-conduct)
-    - [Report Issues 🪲](#report-issues)
-    - [Submit Code Contributions 💻](#submit-code-contributions)
-    - [Feature and Enhancement Contributions 🚀](#feature-and-enhancement-contributions)
-    - [Documentation Contributions 📚](#documentation-contributions)
-    - [Join the Discussion 💬](#join-the-discussion)
+    - [Follow the Code of Conduct 📜](#follow-the-code-of-conduct-)
+    - [Report Issues 🪲](#report-issues-)
+    - [Submit Code Contributions 💻](#submit-code-contributions-)
+    - [Feature and Enhancement Contributions 🚀](#feature-and-enhancement-contributions-)
+    - [Documentation Contributions 📚](#documentation-contributions-)
+    - [Join the Discussion 💬](#join-the-discussion-)
 - [Code Review Process](#code-review-process)
 - [Contributors](#contributors)
 
