@@ -139,14 +139,15 @@ siftyan/
 │   │   └── pypi.go           # Concurrent PyPI metadata fetcher
 │   ├── parser/
 │   │   ├── factory.go        # Parser factory and lockfile detection
-│   │   ├── npm.go            # npm lockfile parser (v3)
-│   │   ├── pip.go            # pip requirements.txt parser
 │   │   ├── normalize.go      # License string normalization to SPDX
+│   │   ├── npm.go            # npm lockfile parser (v3)
+│   │   ├── parser.go         # Parser interface and base parser (template method)
+│   │   ├── pip.go            # pip requirements.txt parser
 │   │   └── types.go          # Dependency tree types and builder
 │   └── report/
-│       ├── terminal.go       # Terminal renderer
 │       ├── html.go           # HTML renderer
-│       └── report.html       # Embedded report template
+│       ├── report.html       # Embedded report template
+│       └── terminal.go       # Terminal renderer
 └── go.mod
 ```
 
@@ -176,7 +177,7 @@ Siftyan maps licenses to their SPDX categories for conflict analysis:
 
 ## Contributing
 
-We will be opening *contributions* soon.
+Contributions are welcome! Please see [CONTRIBUTING.md](.github/CONTRIBUTING.md) for guidelines on reporting issues, submitting code, and joining discussions.
 
 **STAR**, **WATCH** this repo to stay updated. 
 We also welcome you to participate in the **[discussions](https://github.com/AbdulMuizz789/siftyan/discussions)**
@@ -185,4 +186,4 @@ We also welcome you to participate in the **[discussions](https://github.com/Abd
 
 ## License
 
-This project is licensed under the **GNU General Public License v3.0** or later. See `COPYING` for details.
+This project is licensed under the **GNU General Public License v3.0** or later. See [`COPYING`](COPYING) for details.
