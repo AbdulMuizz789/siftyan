@@ -11,7 +11,7 @@
 
 # How to contribute to Siftyan
 
-Software licensing is a complex and nuanced field. If you have an interest in open source software, software licensing, or just want to help build a useful tool for the community you're welcome to contribute! See [README.md](../README.md#installation) for information on how to set up your development environment. Here are some ways you can contribute:
+Software licensing is a complex and nuanced field. If you have an interest in open source software, software licensing, or just want to help build a useful tool for the community you're welcome to contribute! See [README.md](https://github.com/AbdulMuizz789/siftyan/blob/main/README.md#installation) for information on how to set up your development environment. Here are some ways you can contribute:
 
 ## Follow the Code of Conduct 📜
 We are committed to providing a welcoming and inclusive environment for all contributors. Please read and always follow our Code of Conduct, which can be found in the [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) file in our repository.
@@ -19,7 +19,7 @@ We are committed to providing a welcoming and inclusive environment for all cont
 ## Report Issues 🪲
 **If you find a security vulnerability, DO NOT OPEN an issue. Please report it privately by emailing us at siftyan@outlook.com.**
 
-If you find a bug, have a feature request, or want to suggest an improvement, please open an issue on our GitHub repository. Before creating an issue, make sure to search for [existing issues](https://github.com/AbdulMuizz789/siftyan/issues) to avoid duplicates. Be sure to provide as much detail as possible, including steps to reproduce the issue if applicable and any relevant screenshots or error messages. Use the provided [issue templates](ISSUE_TEMPLATE) to help us understand and address your issue more effectively.
+If you find a bug, have a feature request, or want to suggest an improvement, please open an issue on our GitHub repository. Before creating an issue, make sure to search for [existing issues](https://github.com/AbdulMuizz789/siftyan/issues) to avoid duplicates. Be sure to provide as much detail as possible, including steps to reproduce the issue if applicable and any relevant screenshots or error messages. Use the provided [issue templates](https://github.com/AbdulMuizz789/siftyan/tree/main/.github/ISSUE_TEMPLATE) to help us understand and address your issue more effectively.
 
 ## Submit Code Contributions 💻 
 If you want to contribute code that changes more than one or two lines, please fork the repository and create a **new branch** for your changes. Once you've made your changes, submit a pull request with a *clear description* of what you've done and why. We will review your pull request and provide feedback. Testing your changes locally before submitting a pull request is highly recommended.
@@ -54,4 +54,4 @@ The core contributors will review pull requests regularly to ensure that they me
 Thank you for your interest in contributing to Siftyan! We look forward to working with you to make this project even better.
 
 ---
-*Siftyan is licensed under the GNU General Public License v3.0. By contributing to this project, you agree that your contributions will be licensed under the same license. Please ensure that you have the right to submit your contributions and that they do not violate any third-party rights. See the [COPYING](../COPYING) file for more information.*
+*Siftyan is licensed under the GNU General Public License v3.0. By contributing to this project, you agree that your contributions will be licensed under the same license. Please ensure that you have the right to submit your contributions and that they do not violate any third-party rights. See the [COPYING](https://github.com/AbdulMuizz789/siftyan/blob/main/COPYING) file for more information.*
