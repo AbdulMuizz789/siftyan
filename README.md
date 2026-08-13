@@ -4,6 +4,8 @@
 
 It supports **npm** (`package-lock.json`) and **pip** (`requirements.txt`) ecosystems, identifies incompatible license combinations relative to your distribution model, and explains conflicts in plain English with actionable suggestions.
 
+*The suggestions Siftyan provides are not to be taken as legal advice. Siftyan is not liable for consequences of any action taken by relying on its suggestions.*
+
 ---
 
 ## Features
@@ -23,7 +25,7 @@ It supports **npm** (`package-lock.json`) and **pip** (`requirements.txt`) ecosy
 **Prerequisites:** Go 1.21+
 
 ```bash
-git clone https://github.com/yourusername/siftyan.git
+git clone https://github.com/AbdulMuizz789/siftyan.git
 cd siftyan
 go build -o siftyan cmd/main.go
 ```
@@ -157,12 +159,12 @@ siftyan/
 
 Siftyan maps licenses to their SPDX categories for conflict analysis:
 
-| Category | Examples |
+| Category | Supported Licenses |
 |---|---|
-| Permissive | MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, CC0-1.0 |
-| Weak Copyleft | LGPL-2.1, LGPL-3.0, MPL-2.0, EPL-2.0, EUPL-1.2 |
-| Strong Copyleft | GPL-2.0, GPL-3.0 |
-| Network Copyleft | AGPL-3.0 |
+| Permissive | `MIT`, `Apache-2.0`, `BSD-2-Clause`, `BSD-3-Clause`, `ISC`, `CC0-1.0` |
+| Weak Copyleft | `LGPL-2.1`, `LGPL-3.0`, `MPL-2.0`, `EPL-2.0`, `EUPL-1.2` |
+| Strong Copyleft | `GPL-2.0`, `GPL-3.0` |
+| Network Copyleft | `AGPL-3.0` |
 
 ---
 
